@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FormatLogMessages", "src\Fo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpContextBackground", "src\HttpContextBackground\HttpContextBackground.csproj", "{5C97499F-15E3-4759-9531-9532E85175C3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimerLeak", "src\TimerLeak\TimerLeak.csproj", "{95AB1292-5172-46F4-9A9C-6B702199247E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -71,6 +73,18 @@ Global
 		{5C97499F-15E3-4759-9531-9532E85175C3}.Release|x64.Build.0 = Release|Any CPU
 		{5C97499F-15E3-4759-9531-9532E85175C3}.Release|x86.ActiveCfg = Release|Any CPU
 		{5C97499F-15E3-4759-9531-9532E85175C3}.Release|x86.Build.0 = Release|Any CPU
+		{95AB1292-5172-46F4-9A9C-6B702199247E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95AB1292-5172-46F4-9A9C-6B702199247E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{95AB1292-5172-46F4-9A9C-6B702199247E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{95AB1292-5172-46F4-9A9C-6B702199247E}.Debug|x64.Build.0 = Debug|Any CPU
+		{95AB1292-5172-46F4-9A9C-6B702199247E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{95AB1292-5172-46F4-9A9C-6B702199247E}.Debug|x86.Build.0 = Debug|Any CPU
+		{95AB1292-5172-46F4-9A9C-6B702199247E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{95AB1292-5172-46F4-9A9C-6B702199247E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{95AB1292-5172-46F4-9A9C-6B702199247E}.Release|x64.ActiveCfg = Release|Any CPU
+		{95AB1292-5172-46F4-9A9C-6B702199247E}.Release|x64.Build.0 = Release|Any CPU
+		{95AB1292-5172-46F4-9A9C-6B702199247E}.Release|x86.ActiveCfg = Release|Any CPU
+		{95AB1292-5172-46F4-9A9C-6B702199247E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -80,6 +94,7 @@ Global
 		{AE591ACB-9496-4D97-AFD6-054A681964A1} = {9EC33B83-D8D8-4C02-A4A8-5FD1FAC8C1E7}
 		{AA207BBB-7047-4EBB-8420-2D1E3DA4FC64} = {9EC33B83-D8D8-4C02-A4A8-5FD1FAC8C1E7}
 		{5C97499F-15E3-4759-9531-9532E85175C3} = {9EC33B83-D8D8-4C02-A4A8-5FD1FAC8C1E7}
+		{95AB1292-5172-46F4-9A9C-6B702199247E} = {9EC33B83-D8D8-4C02-A4A8-5FD1FAC8C1E7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5814CC36-22C4-47A9-8BEF-7C0775A8B7E5}
