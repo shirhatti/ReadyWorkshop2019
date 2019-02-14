@@ -44,18 +44,13 @@ Let's a closer look at this method
 public async Task<IActionResult> UploadConference([Required, FromForm]string conferenceName, IFormFile file, CancellationToken cancellationToken)
 {
     var loader = new SessionizeLoader();
-    
+
     using (var ms = new MemoryStream())
     {
         file.CopyTo(ms);
         ms.Position = 0;
         await loader.LoadDataAsync(conferenceName, ms, _db);
     }
-    //using (var stream = file.OpenReadStream())
-    //{
-    //    loader.LoadData(conferenceName, stream, _db);
-    //    await loader.LoadDataAsync(conferenceName, stream, _db, cancellationToken);
-    //}
 
     await _db.SaveChangesAsync();
 
@@ -86,10 +81,19 @@ public async Task<IActionResult> UploadConference([Required, FromForm]string con
 }
 ```
 
+At this point we're ready to import data.
+
 Run the application and use the Swagger UI to upload the `.\lab\BackEnd\Data\Import\NDC_London_2019.json` file to the `/api/Conferences/upload` API. Let's give the conference the name `NDCLondon`.
+
+You can use the Swagger UI and verify that your upload was successful by trying a `GET` request on `/api/Conferences`. We should see the conference with the name `NDCLondon` that we just created.
+
+## Explore
+
+Now that we have some initial data and our database is seeded, trying playing around with app and get a feel for what is happening. I recommend changing your startup project in Visual Studio to launch both the FrontEnd and the Backend.
 
 ### Change startup project
 
 Change the startup project to launch both the FrontEnd and the BackEnd
 
 ![Change Startup Project](./screenshots/startup.PNG)
+
