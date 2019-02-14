@@ -10,7 +10,7 @@ namespace HttpContextBackground
 {
     public class MessageQueue
     {
-        public BlockingCollection<HttpContext> Collection { get; } = new BlockingCollection<HttpContext>(100);
+        public BlockingCollection<ILogContext> Collection { get; } = new BlockingCollection<ILogContext>(100);
 
         public virtual void EnqueueMessage(HttpContext context)
         {
@@ -18,13 +18,14 @@ namespace HttpContextBackground
             {
                 try
                 {
-                    Collection.Add(context);
+                    Collection.Add(new CopyLogContext(context));
                     return;
                 }
                 catch (InvalidOperationException) { }
             }
         }
     }
+
     public class CustomHostedService : HostedService
     {
         private readonly MessageQueue _messageQueue;
@@ -39,9 +40,10 @@ namespace HttpContextBackground
                 await Task.Yield();
                 try
                 {
-                    foreach (var httpContext in _messageQueue.Collection.GetConsumingEnumerable(cancellationToken))
+                    foreach (var logContext in _messageQueue.Collection.GetConsumingEnumerable(cancellationToken))
                     {
-                        Console.WriteLine($"Request path: {httpContext.Request.Path}\tRequest ID: {httpContext.TraceIdentifier}\n");
+                        Console.WriteLine($"Request path: {logContext.Path}\tRequest ID: {logContext.TraceIdentifier}\n");
+                        
                     }
                 }
                 catch
