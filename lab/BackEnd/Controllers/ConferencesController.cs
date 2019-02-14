@@ -1,11 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BackEnd.Data;
 using ConferenceDTO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace BackEnd.Controllers
@@ -55,13 +59,18 @@ namespace BackEnd.Controllers
 
         [HttpPost("upload")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> UploadConference([Required, FromForm]string conferenceName, IFormFile file)
+        public async Task<IActionResult> UploadConference([Required, FromForm]string conferenceName, IFormFile file, CancellationToken cancellationToken)
         {
+
             var loader = new SessionizeLoader();
 
-            using (var stream = file.OpenReadStream())
+            using (var ms = new MemoryStream())
             {
-                await loader.LoadDataAsync(conferenceName, stream, _db);
+                file.OpenReadStream().Dispose();
+                file.CopyTo(ms);
+                // Rewind the MemoryStream
+                ms.Position = 0;
+                await loader.LoadDataAsync(conferenceName, ms, _db, cancellationToken);
             }
 
             await _db.SaveChangesAsync();
