@@ -88,6 +88,49 @@ Run the application and use the Swagger UI to upload the `.\lab\BackEnd\Data\Imp
 
 You can use the Swagger UI and verify that your upload was successful by trying a `GET` request on `/api/Conferences`. We should see the conference with the name `NDCLondon` that we just created.
 
+## Format log messages
+
+Let's continue taking a look at the Backend application. Head over to `Startup.cs` file. You'll notice a call to `app.UseMiddleware<RequestHeaderLoggingMiddleware>()` as part of the Configure Method.
+
+This is a middleware that we've introduced for diagnostic purposes. It logs the value of all incoming request header and can be extremely useful during debugging.
+
+```csharp
+public Task Invoke(HttpContext context)
+{
+    var builder = new StringBuilder(Environment.NewLine);
+    foreach (var header in context.Request.Headers)
+    {
+        builder.AppendLine($"{header.Key}:{header.Value}");
+    }
+    _logger.LogTrace(builder.ToString());
+
+    return _next(context);
+}
+```
+
+However, you'll notice that we're serializing the header collection on every request, even if it ends up not getting logged due to the chosen filtering level.
+
+You can try this by changing the log level for the `Backed.RequestHeaderLoggingMiddleware` in `appSettings.json`. As an exercise, how would you avoid this expensive serialization in the event that we end up not writing the log?
+
+```csharp
+public Task Invoke(HttpContext context)
+{
+    if (_logger.IsEnabled(LogLevel.Trace))
+    {
+        var builder = new StringBuilder(Environment.NewLine);
+        foreach (var header in context.Request.Headers)
+        {
+            builder.AppendLine($"{header.Key}:{header.Value}");
+        }
+        _logger.LogTrace(builder.ToString());
+    }
+
+    return _next(context);
+}
+```
+
+The answer is indeed an elegant solution where all we're doing is wrapping our entire serialization in an if block if the logger is not enabled.
+
 ## Explore
 
 Now that we have some initial data and our database is seeded, trying playing around with app and get a feel for what is happening. I recommend changing your startup project in Visual Studio to launch both the FrontEnd and the Backend.
@@ -97,6 +140,7 @@ Now that we have some initial data and our database is seeded, trying playing ar
 Change the startup project to launch both the FrontEnd and the BackEnd
 
 ![Change Startup Project](./screenshots/startup.PNG)
+
 
 ## Cancelling Tasks
 
