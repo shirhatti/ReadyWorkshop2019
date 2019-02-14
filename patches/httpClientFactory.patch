@@ -1,0 +1,29 @@
+diff --git a/lab/FrontEnd/Services/ApiClient.cs b/lab/FrontEnd/Services/ApiClient.cs
+index 07203e0..9e9516a 100644
+--- a/lab/FrontEnd/Services/ApiClient.cs
++++ b/lab/FrontEnd/Services/ApiClient.cs
+@@ -14,9 +14,9 @@ namespace FrontEnd.Services
+     {
+         private readonly HttpClient _httpClient;
+ 
+-        public ApiClient(IOptions<ApiClientOptions> options)
++        public ApiClient(HttpClient httpClient, IOptions<ApiClientOptions> options)
+         {
+-            _httpClient = new HttpClient();
++            _httpClient = httpClient;
+             _httpClient.BaseAddress = options.Value.BaseAddress;
+         }
+ 
+diff --git a/lab/FrontEnd/Startup.cs b/lab/FrontEnd/Startup.cs
+index 62c92fa..40a9533 100644
+--- a/lab/FrontEnd/Startup.cs
++++ b/lab/FrontEnd/Startup.cs
+@@ -40,7 +40,7 @@ namespace FrontEnd
+                 options.BaseAddress = new Uri(Configuration["serviceUrl"]);
+             });
+ 
+-            services.AddScoped<IApiClient, ApiClient>();
++            services.AddHttpClient<IApiClient, ApiClient>();
+         }
+ 
+         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

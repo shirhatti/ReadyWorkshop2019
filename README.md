@@ -29,3 +29,12 @@ cd .\ReadyWorkshop2019\lab\BackEnd
 dotnet ef migrations add Initial
 dotnet ef database update
 ```
+
+### Seed the database
+// TODO
+
+### Change startup project
+
+Change the startup project to launch both the FrontEnd and the BackEnd
+
+![Change Startup Project](./screenshots/startup.PNG)
