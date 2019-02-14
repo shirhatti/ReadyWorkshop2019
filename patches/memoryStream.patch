@@ -13,8 +13,8 @@ index 0b6c440..82eed33 100644
 -                file.CopyTo(ms);
 -                // Rewind the MemoryStream
 -                ms.Position = 0;
--                await loader.LoadDataAsync(conferenceName, ms, _db, cancellationToken);
-+                await loader.LoadDataAsync(conferenceName, stream, _db, cancellationToken);
+-                await loader.LoadDataAsync(conferenceName, ms, _db);
++                await loader.LoadDataAsync(conferenceName, stream, _db);
              }
  
              await _db.SaveChangesAsync();

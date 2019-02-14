@@ -59,7 +59,7 @@ namespace BackEnd.Controllers
 
         [HttpPost("upload")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> UploadConference([Required, FromForm]string conferenceName, IFormFile file, CancellationToken cancellationToken)
+        public async Task<IActionResult> UploadConference([Required, FromForm]string conferenceName, IFormFile file)
         {
 
             var loader = new SessionizeLoader();
@@ -70,7 +70,7 @@ namespace BackEnd.Controllers
                 file.CopyTo(ms);
                 // Rewind the MemoryStream
                 ms.Position = 0;
-                await loader.LoadDataAsync(conferenceName, ms, _db, cancellationToken);
+                await loader.LoadDataAsync(conferenceName, ms, _db);
             }
 
             await _db.SaveChangesAsync();
