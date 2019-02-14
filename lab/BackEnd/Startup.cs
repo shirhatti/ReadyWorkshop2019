@@ -42,6 +42,8 @@ namespace BackEnd
                 }
             });
 
+            services.AddSingleton<MessageQueue>();
+
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             services.AddSwaggerGen(options =>
@@ -71,6 +73,12 @@ namespace BackEnd
             app.UseHttpsRedirection();
 
             app.UseMiddleware<RequestHeaderLoggingMiddleware>();
+
+            app.Use(async (context, next) =>
+            {
+                context.RequestServices.GetRequiredService<MessageQueue>().EnqueueMessage(context);
+                await next.Invoke();
+            });
 
             app.UseMvc();
 
