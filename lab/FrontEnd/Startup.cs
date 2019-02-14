@@ -35,10 +35,12 @@ namespace FrontEnd
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
-            services.AddHttpClient<IApiClient, ApiClient>(client =>
+            services.Configure<ApiClientOptions>(options =>
             {
-                client.BaseAddress = new Uri(Configuration["serviceUrl"]);
+                options.BaseAddress = new Uri(Configuration["serviceUrl"]);
             });
+
+            services.AddScoped<IApiClient, ApiClient>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

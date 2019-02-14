@@ -5,6 +5,8 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using ConferenceDTO;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.Options;
 
 namespace FrontEnd.Services
 {
@@ -12,9 +14,10 @@ namespace FrontEnd.Services
     {
         private readonly HttpClient _httpClient;
 
-        public ApiClient(HttpClient httpClient)
+        public ApiClient(IOptions<ApiClientOptions> options)
         {
-            _httpClient = httpClient;
+            _httpClient = new HttpClient();
+            _httpClient.BaseAddress = options.Value.BaseAddress;
         }
 
         public async Task<bool> AddAttendeeAsync(Attendee attendee)
