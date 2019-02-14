@@ -1,0 +1,20 @@
+diff --git a/lab/BackEnd/Controllers/ConferencesController.cs b/lab/BackEnd/Controllers/ConferencesController.cs
+index 0b6c440..82eed33 100644
+--- a/lab/BackEnd/Controllers/ConferencesController.cs
++++ b/lab/BackEnd/Controllers/ConferencesController.cs
+@@ -64,13 +64,9 @@ namespace BackEnd.Controllers
+ 
+             var loader = new SessionizeLoader();
+ 
+-            using (var ms = new MemoryStream())
++            using (var stream = file.OpenReadStream())
+             {
+-                file.OpenReadStream().Dispose();
+-                file.CopyTo(ms);
+-                // Rewind the MemoryStream
+-                ms.Position = 0;
+-                await loader.LoadDataAsync(conferenceName, ms, _db, cancellationToken);
++                await loader.LoadDataAsync(conferenceName, stream, _db, cancellationToken);
+             }
+ 
+             await _db.SaveChangesAsync();
