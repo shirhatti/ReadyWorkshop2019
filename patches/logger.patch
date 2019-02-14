@@ -1,0 +1,24 @@
+diff --git a/lab/BackEnd/RequestHeaderLoggingMiddleware.cs b/lab/BackEnd/RequestHeaderLoggingMiddleware.cs
+index 4c8f70b..4b45162 100644
+--- a/lab/BackEnd/RequestHeaderLoggingMiddleware.cs
++++ b/lab/BackEnd/RequestHeaderLoggingMiddleware.cs
+@@ -21,12 +21,15 @@ namespace BackEnd
+ 
+         public Task Invoke(HttpContext context)
+         {
+-            var builder = new StringBuilder(Environment.NewLine);
+-            foreach (var header in context.Request.Headers)
++            if (_logger.IsEnabled(LogLevel.Trace))
+             {
+-                builder.AppendLine($"{header.Key}:{header.Value}");
++                var builder = new StringBuilder(Environment.NewLine);
++                foreach (var header in context.Request.Headers)
++                {
++                    builder.AppendLine($"{header.Key}:{header.Value}");
++                }
++                _logger.LogTrace(builder.ToString());
+             }
+-            _logger.LogTrace(builder.ToString());
+             
+             return _next(context);
+         }
