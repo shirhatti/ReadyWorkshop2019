@@ -127,10 +127,5 @@ namespace BackEnd.Controllers
             };
             return result;
         }
-
-        private static DataLoader GetLoader(ConferenceFormat format)
-        {
-                return new SessionizeLoader();
-        }
     }
 }

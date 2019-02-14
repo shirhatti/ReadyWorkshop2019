@@ -82,6 +82,7 @@ namespace BackEnd
             }
         }
 
+#pragma warning disable IDE1006
         private class RootObject
         {
             public DateTime date { get; set; }
@@ -131,5 +132,6 @@ namespace BackEnd
             public string slotStart { get; set; }
             public List<Room> rooms { get; set; }
         }
+#pragma warning restore IDE1006
     }
 }

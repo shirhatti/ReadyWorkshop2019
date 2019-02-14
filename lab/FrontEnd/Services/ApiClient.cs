@@ -16,8 +16,10 @@ namespace FrontEnd.Services
 
         public ApiClient(IOptions<ApiClientOptions> options)
         {
-            _httpClient = new HttpClient();
-            _httpClient.BaseAddress = options.Value.BaseAddress;
+            _httpClient = new HttpClient
+            {
+                BaseAddress = options.Value.BaseAddress
+            };
         }
 
         public async Task<bool> AddAttendeeAsync(Attendee attendee)
