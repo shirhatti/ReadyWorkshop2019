@@ -301,3 +301,54 @@ public async Task<ActionResult<List<SessionResponse>>> Get()
 ```
 
 Now attempt this exercise on all methods in this controller.
+
+## HttpContext isn't thread-safe
+
+It's a common pattern to want to stash away the HttpContext, so that you can later access things that hang off it (Request/Response headers, Path, Trace Id, etc). For example, the ApplicationInsights does exactly this. Through a myriad of Telemetry Processors you can additional data that sits in a write-behind buffer before it is eventually logged. However, the HttpContext is not thread safe, and you may see memory corruption if you attempt to do so.
+
+In our example, we have DiagnosticsController that exposes information about how many times each path has been called. It does through a MessageQueue service. There is middleware that enqueues a message as part of the pipeline on every request. And the message queue service dequeues these message on a separate thread.
+
+The DiagnosticsController is just a thin wrapper around this service.
+
+```csharp
+private void ProcessMessageQueue()
+{
+    try
+    {
+        foreach (var message in _messageQueue.GetConsumingEnumerable())
+        {
+            _hitCount.AddOrUpdate(WebUtility.UrlEncode(message.Path), 1, (id, count) => count + 1);
+        }
+    }
+    catch
+    {
+        try
+        {
+            _messageQueue.CompleteAdding();
+        }
+        catch { }
+    }
+}
+```
+
+While we have a contrived example where all we do is update the hit count for every path, you could conceivably do a lot more here.
+
+However, the concern here is that the message being enqueued is the HttpContext which we know to be unsafe. How would you fix the application so that we aren't accessing HttpContext from multiple threads?
+
+===
+
+The solution is to copy the fields that we care about from the HttpContext and stash them individually rather than stashing the entire HttpContext
+
+```csharp
+        public class LogContext : ILogContext
+    {
+        public LogContext(HttpContext httpContext)
+        {
+            Path = httpContext.Request.Path;
+            TraceIdentifier = httpContext.TraceIdentifier;
+        }
+        public string Path { get; }
+
+        public string TraceIdentifier { get; }
+    }
+```
