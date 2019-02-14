@@ -1,0 +1,24 @@
+diff --git a/lab/BackEnd/LogContext.cs b/lab/BackEnd/LogContext.cs
+index 04eb8a1..a1e6731 100644
+--- a/lab/BackEnd/LogContext.cs
++++ b/lab/BackEnd/LogContext.cs
+@@ -8,14 +8,14 @@ namespace BackEnd
+ {
+     public class LogContext : ILogContext
+     {
+-        private readonly HttpContext _httpContext;
+-        public LogContext(HttpContext context)
++        public LogContext(HttpContext httpContext)
+         {
+-            _httpContext = context;
++            Path = httpContext.Request.Path;
++            TraceIdentifier = httpContext.TraceIdentifier;
+         }
+-        public string Path { get { return _httpContext.Request.Path; } }
++        public string Path { get; }
+ 
+-        public string TraceIdentifier { get { return _httpContext.TraceIdentifier; } }
++        public string TraceIdentifier { get; }
+     }
+ 
+     public interface ILogContext
