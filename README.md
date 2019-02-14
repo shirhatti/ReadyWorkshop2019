@@ -30,8 +30,63 @@ dotnet ef migrations add Initial
 dotnet ef database update
 ```
 
-### Seed the database
-// TODO
+## Upload the initial data
+
+Instead of using Entity Framework to seed the data, let's use an existing API endpoint that we have that allows us to upload a conference file format.
+
+We will be using the existing `/api/Conferences/upload` endpoint to `POST` a file containing the conference schedule.
+
+Let's a closer look at this method
+
+```csharp
+[HttpPost("upload")]
+[Consumes("multipart/form-data")]
+public async Task<IActionResult> UploadConference([Required, FromForm]string conferenceName, IFormFile file, CancellationToken cancellationToken)
+{
+    var loader = new SessionizeLoader();
+    
+    using (var ms = new MemoryStream())
+    {
+        file.CopyTo(ms);
+        ms.Position = 0;
+        await loader.LoadDataAsync(conferenceName, ms, _db);
+    }
+    //using (var stream = file.OpenReadStream())
+    //{
+    //    loader.LoadData(conferenceName, stream, _db);
+    //    await loader.LoadDataAsync(conferenceName, stream, _db, cancellationToken);
+    //}
+
+    await _db.SaveChangesAsync();
+
+    return Ok();
+}
+```
+
+While on first glance there isn't anything wrong this method, on closer inspection we notice that we can directly access the underlying stream via `file.OpenReadStream()`. While in our case, there isn't of much impact, it could be problematic when dealing with larger files. By default when reading any single file larger than 64KB, it will be moved from RAM to a temp file. By copying it into a MemoryStream, we just undid all hard work done by the framework for us.
+
+Let's go ahead and fix this code as shown below.
+
+```csharp
+[HttpPost("upload")]
+[Consumes("multipart/form-data")]
+public async Task<IActionResult> UploadConference([Required, FromForm]string conferenceName, IFormFile file, CancellationToken cancellationToken)
+{
+    var loader = new SessionizeLoader();
+
+    using (var stream = file.OpenReadStream())
+    {
+       loader.LoadData(conferenceName, stream, _db);
+       await loader.LoadDataAsync(conferenceName, stream, _db, cancellationToken);
+    }
+
+    await _db.SaveChangesAsync();
+
+    return Ok();
+}
+```
+
+Run the application and use the Swagger UI to upload the `.\lab\BackEnd\Data\Import\NDC_London_2019.json` file to the `/api/Conferences/upload` API. Let's give the conference the name `NDCLondon`.
 
 ### Change startup project
 
