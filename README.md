@@ -61,7 +61,9 @@ public async Task<IActionResult> UploadConference([Required, FromForm]string con
 
 While on first glance there isn't anything wrong this method, on closer inspection we notice that we can directly access the underlying stream via `file.OpenReadStream()`. While in our case, there isn't of much impact, it could be problematic when dealing with larger files. By default when reading any single file larger than 64KB, it will be moved from RAM to a temp file by MVC. By copying it into a MemoryStream, we just undid all hard work done by the framework for us.
 
-Let's go ahead and fix this code as shown below.
+How would you fix this code?
+
+===
 
 ```csharp
 [HttpPost("upload")]
@@ -110,7 +112,9 @@ public Task Invoke(HttpContext context)
 
 However, you'll notice that we're serializing the header collection on every request, even if it ends up not getting logged due to the chosen filtering level.
 
-You can try this by changing the log level for the `Backed.RequestHeaderLoggingMiddleware` in `appSettings.json`. As an exercise, how would you avoid this expensive serialization in the event that we end up not writing the log?
+You can try this by changing the log level for the `BackEnd.RequestHeaderLoggingMiddleware` in `appSettings.json`. As an exercise, how would you avoid this expensive serialization in the event that we end up not writing the log message?
+
+===
 
 ```csharp
 public Task Invoke(HttpContext context)
@@ -171,7 +175,11 @@ public static async Task<T> TimeoutAfter<T>(this Task<T> task, TimeSpan timeout)
 }
 ```
 
-While naively this might look like it works, we're not cancelling the delayTask we're creating even when our operation successfully completes. This even we could easily end up with timer queue flooding especially if this occurs on the hot path. The right approach here is to ensure the timer is being disposed of.
+While naively this might look like it works, we're not cancelling the delayTask we're creating even when our operation successfully completes. With this we could easily end up with timer queue flooding especially if this occurs on the hot path. The right approach here is to ensure the timer is being disposed of.
+
+How would you ensure that the timer is being disposed correctly?
+
+===
 
 ```csharp
 public static async Task<T> TimeoutAfter<T>(this Task<T> task, TimeSpan timeout)
@@ -219,6 +227,10 @@ Despite the fact `HttpClient` implements the `IDisposable`, it should not be dis
 
 Conveniently enough, we ship a `HttpClientFactory` that you can use that does all this for you.
 
+How would you attempt to switch to using HttpClientFactory?
+
+===
+
 To switch to HttpClientFactory, add it to your `ConfigureServices` method in `Startup.cs`. 
 
 ```csharp
@@ -265,6 +277,10 @@ public ActionResult<List<SessionResponse>> Get()
 }
 ```
 
+We know the solution here is to have async Actions on our controllers instead. How would change the code to avoid using `.GetAwaiter().GetResult()`?
+
+===
+
 Fixing this trivial. Instead of calling `.GetAwaiter().GetResult()`, we can call await and change the signature to an Async method
 
 ```csharp
@@ -285,4 +301,3 @@ public async Task<ActionResult<List<SessionResponse>>> Get()
 ```
 
 Now attempt this exercise on all methods in this controller.
-
