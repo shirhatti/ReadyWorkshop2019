@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using BackEnd.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -68,6 +69,9 @@ namespace BackEnd
             }
 
             app.UseHttpsRedirection();
+
+            app.UseMiddleware<RequestHeaderLoggingMiddleware>();
+
             app.UseMvc();
 
             app.Run(context =>
