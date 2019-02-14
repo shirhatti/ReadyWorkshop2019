@@ -4,11 +4,12 @@
 
 In this workshop, we'll start with sample ASP.NET Core application. This application comprises of an API-backend, a web front-end application, and a common library for shared data transfer objects.
 
-However, this application is riddled with anti-patterns that prevent this application from scaling well. Due course of this workshop, we'll attempt to fix some of the issue with the application.
+However, this application is riddled with anti-patterns that prevent this application from scaling well. Due course of this workshop, we'll attempt to fix some of the issues with the application.
 
 ## Getting started
 
-To begin with let's ensure we cloning and trying the build the starting point of the project. Start by navigating to the `./lab` directory and building the solution
+To begin with let's start by cloing and building the starting point of the project.
+Start by navigating to the `./lab` directory and building the solution
 
 ```powershell
 git clone https://github.com/shirhatti/ReadyWorkshop2019.git
@@ -58,7 +59,7 @@ public async Task<IActionResult> UploadConference([Required, FromForm]string con
 }
 ```
 
-While on first glance there isn't anything wrong this method, on closer inspection we notice that we can directly access the underlying stream via `file.OpenReadStream()`. While in our case, there isn't of much impact, it could be problematic when dealing with larger files. By default when reading any single file larger than 64KB, it will be moved from RAM to a temp file. By copying it into a MemoryStream, we just undid all hard work done by the framework for us.
+While on first glance there isn't anything wrong this method, on closer inspection we notice that we can directly access the underlying stream via `file.OpenReadStream()`. While in our case, there isn't of much impact, it could be problematic when dealing with larger files. By default when reading any single file larger than 64KB, it will be moved from RAM to a temp file by MVC. By copying it into a MemoryStream, we just undid all hard work done by the framework for us.
 
 Let's go ahead and fix this code as shown below.
 
@@ -154,7 +155,7 @@ public static async Task<T> TimeoutAfter<T>(this Task<T> task, TimeSpan timeout)
 
 ## Prevent port exhaustion
 
-Let's jump over to our FrontEnd to look at this problem. We've registered a scoped service `ApiClient` to make it easier to make API calls to our backend. The `ApiClient` class abstract aways the underlying HTTP semanticcs and exposes an easy to use API in all our controllers.
+Let's jump over to our FrontEnd to look at this problem. We've registered a scoped service `ApiClient` to make it easier to make API calls to our backend. The `ApiClient` class abstract aways the underlying HTTP semantics and exposes an easy to use API in all our controllers.
 
 Let's look at what we're doing in the Contructor of this service.
 
@@ -167,6 +168,7 @@ public ApiClient(IOptions<ApiClientOptions> options)
     };
 }
 ```
+
 Since the ServiceContainer ensures our scoped services get disposed for us, we're effectively disposing of HttpClient for every request.
 
 Despite the fact `HttpClient` implements the `IDisposable`, it should not be disposed of. Although it is re-entrant, the superior way to use it is pool the underlying `HttpMessageHandler` that owns the TCP socket and just create a new HttpClient using a pooled instance of the `HttpMessageHandler`. When you dispose of a client instance the underlying HttpMessageHandler is disposed. Once that happens and you initiate closing the TCP socket, you're waiting for OS timeout (2 minutes) for the socket to have gone from `TIME_WAIT` to closed. Though HttpClient is thread-safe, you don't want to be using a singleton since that ensures that DNS won't get re-resolved. If your app stays enough long enough, you may no longer be able to connect to destination server since you don't respect DNS TTL.
@@ -194,3 +196,6 @@ public ApiClient(HttpClient httpClient, IOptions<ApiClientOptions> options)
     _httpClient.BaseAddress = options.Value.BaseAddress;
 }
 ```
+
+## Don't block a ThreadPool thread
+
