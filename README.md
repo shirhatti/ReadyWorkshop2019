@@ -152,3 +152,45 @@ public static async Task<T> TimeoutAfter<T>(this Task<T> task, TimeSpan timeout)
 }
 ```
 
+## Prevent port exhaustion
+
+Let's jump over to our FrontEnd to look at this problem. We've registered a scoped service `ApiClient` to make it easier to make API calls to our backend. The `ApiClient` class abstract aways the underlying HTTP semanticcs and exposes an easy to use API in all our controllers.
+
+Let's look at what we're doing in the Contructor of this service.
+
+```csharp
+public ApiClient(IOptions<ApiClientOptions> options)
+{
+    _httpClient = new HttpClient
+    {
+        BaseAddress = options.Value.BaseAddress
+    };
+}
+```
+Since the ServiceContainer ensures our scoped services get disposed for us, we're effectively disposing of HttpClient for every request.
+
+Despite the fact `HttpClient` implements the `IDisposable`, it should not be disposed of. Although it is re-entrant, the superior way to use it is pool the underlying `HttpMessageHandler` that owns the TCP socket and just create a new HttpClient using a pooled instance of the `HttpMessageHandler`. When you dispose of a client instance the underlying HttpMessageHandler is disposed. Once that happens and you initiate closing the TCP socket, you're waiting for OS timeout (2 minutes) for the socket to have gone from `TIME_WAIT` to closed. Though HttpClient is thread-safe, you don't want to be using a singleton since that ensures that DNS won't get re-resolved. If your app stays enough long enough, you may no longer be able to connect to destination server since you don't respect DNS TTL.
+
+Conveniently enough, we ship a `HttpClientFactory` that you can use that does all this for you.
+
+To switch to HttpClientFactory, add it to your `ConfigureServices` method in `Startup.cs`. 
+
+```csharp
+services.AddHttpClient<IApiClient, ApiClient>();
+```
+
+You should also **REMOVE** the call to add your existing client as a scoped service.
+
+```diff
+- services.AddScoped<IApiClient, ApiClient>();
+```
+
+We'll also need to change the constructor of the ApiClient to now accept an `HttpClient` via constructor injection instead.
+
+```csharp
+public ApiClient(HttpClient httpClient, IOptions<ApiClientOptions> options)
+{
+    _httpClient = httpClient;
+    _httpClient.BaseAddress = options.Value.BaseAddress;
+}
+```
