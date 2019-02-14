@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BackEnd.Data;
+using BackEnd.System.Threading.Tasks;
 using ConferenceDTO;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
@@ -45,21 +47,28 @@ namespace BackEnd.Controllers
                                                    )
                                                    .ToListAsync();
 
-            var sessionResults = await sessionResultsTask;
-            var speakerResults = await speakerResultsTask;
-
-            var results = sessionResults.Select(s => new SearchResult
+            try
             {
-                Type = SearchResultType.Session,
-                Value = JObject.FromObject(s.MapSessionResponse())
-            })
-            .Concat(speakerResults.Select(s => new SearchResult
-            {
-                Type = SearchResultType.Speaker,
-                Value = JObject.FromObject(s.MapSpeakerResponse())
-            }));
+                var sessionResults = await sessionResultsTask.TimeoutAfter(TimeSpan.FromSeconds(1));
+                var speakerResults = await speakerResultsTask.TimeoutAfter(TimeSpan.FromSeconds(1));
 
-            return Ok(results);
+                var results = sessionResults.Select(s => new SearchResult
+                {
+                    Type = SearchResultType.Session,
+                    Value = JObject.FromObject(s.MapSessionResponse())
+                })
+                .Concat(speakerResults.Select(s => new SearchResult
+                {
+                    Type = SearchResultType.Speaker,
+                    Value = JObject.FromObject(s.MapSpeakerResponse())
+                }));
+
+                return Ok(results);
+            }
+            catch (OperationCanceledException)
+            {
+                return StatusCode(StatusCodes.Status408RequestTimeout);
+            }
         }
     }
 }
