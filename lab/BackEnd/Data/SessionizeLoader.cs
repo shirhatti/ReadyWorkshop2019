@@ -8,9 +8,9 @@ using Newtonsoft.Json.Linq;
 
 namespace BackEnd
 {
-    public class SessionizeLoader : DataLoader
+    public class SessionizeLoader
     {
-        public override async Task LoadDataAsync(string conferenceName, Stream fileStream, ApplicationDbContext db)
+        public async Task LoadDataAsync(string conferenceName, Stream fileStream, ApplicationDbContext db)
         {
             //var blah = new RootObject().rooms[0].sessions[0].speakers[0].name;
 
