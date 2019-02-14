@@ -97,3 +97,58 @@ Change the startup project to launch both the FrontEnd and the BackEnd
 
 ![Change Startup Project](./screenshots/startup.PNG)
 
+## Cancelling Tasks
+
+Let's us turn our attention over to the `SearchController` in the backend. Search operations can be expensive and we want limit the thrashing of our database. Therefore in the `SearchController` we have implemented Timeouts on expensive database queries. The `TimeoutAfter` method has been implemented as an extension method that hangs off of `Task`. Let look at how's it's being used in the Controller.
+
+```csharp
+...
+var sessionResults = await sessionResultsTask.TimeoutAfter(TimeSpan.FromSeconds(1));
+var speakerResults = await speakerResultsTask.TimeoutAfter(TimeSpan.FromSeconds(1));
+...
+```
+
+As evident from the usage, we want our expensive database queries to timout after 1 seconds. Let's look at the actual implementation of how we've achieved this.
+
+```csharp
+public static async Task<T> TimeoutAfter<T>(this Task<T> task, TimeSpan timeout)
+{
+    var delayTask = Task.Delay(timeout);
+
+    var resultTask = await Task.WhenAny(task, delayTask);
+    if (resultTask == delayTask)
+    {
+        // Operation cancelled
+        throw new OperationCanceledException();
+    }
+
+    return await task;
+}
+```
+
+While naively this might look like it works, we're not cancelling the delayTask we're creating even when our operation successfully completes. This even we could easily end up with timer queue flooding especially if this occurs on the hot path. The right approach here is to ensure the timer is being disposed of.
+
+```csharp
+public static async Task<T> TimeoutAfter<T>(this Task<T> task, TimeSpan timeout)
+{
+    using (var cts = new CancellationTokenSource())
+    {
+        var delayTask = Task.Delay(timeout, cts.Token);
+
+        var resultTask = await Task.WhenAny(task, delayTask);
+        if (resultTask == delayTask)
+        {
+            // Operation cancelled
+            throw new OperationCanceledException();
+        }
+        else
+        {
+            // Cancel the timer task so that it does not fire
+            cts.Cancel();
+        }
+
+        return await task;
+    }
+}
+```
+
