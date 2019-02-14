@@ -21,29 +21,33 @@ namespace BackEnd.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<SessionResponse>>> Get()
+        public ActionResult<List<SessionResponse>> Get()
         {
-            var sessions = await _db.Sessions.AsNoTracking()
+            var sessions = _db.Sessions.AsNoTracking()
                                              .Include(s => s.Track)
                                              .Include(s => s.SessionSpeakers)
                                                 .ThenInclude(ss => ss.Speaker)
                                              .Include(s => s.SessionTags)
                                                 .ThenInclude(st => st.Tag)
                                              .Select(m => m.MapSessionResponse())
-                                             .ToListAsync();
+                                             .ToListAsync()
+                                             .GetAwaiter()
+                                             .GetResult();
             return sessions;
         }
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<SessionResponse>> Get(int id)
+        public ActionResult<SessionResponse> Get(int id)
         {
-            var session = await _db.Sessions.AsNoTracking()
+            var session = _db.Sessions.AsNoTracking()
                                             .Include(s => s.Track)
                                             .Include(s => s.SessionSpeakers)
                                                 .ThenInclude(ss => ss.Speaker)
                                             .Include(s => s.SessionTags)
                                                 .ThenInclude(st => st.Tag)
-                                            .SingleOrDefaultAsync(s => s.ID == id);
+                                            .SingleOrDefaultAsync(s => s.ID == id)
+                                            .GetAwaiter()
+                                            .GetResult();
 
             if (session == null)
             {
@@ -54,7 +58,7 @@ namespace BackEnd.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<SessionResponse>> Post(ConferenceDTO.Session input)
+        public ActionResult<SessionResponse> Post(ConferenceDTO.Session input)
         {
             var session = new Data.Session
             {
@@ -67,7 +71,9 @@ namespace BackEnd.Controllers
             };
 
             _db.Sessions.Add(session);
-            await _db.SaveChangesAsync();
+            _db.SaveChangesAsync()
+                .GetAwaiter()
+                .GetResult();
 
             var result = session.MapSessionResponse();
 
@@ -75,9 +81,11 @@ namespace BackEnd.Controllers
         }
 
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> Put(int id, ConferenceDTO.Session input)
+        public IActionResult Put(int id, ConferenceDTO.Session input)
         {
-            var session = await _db.Sessions.FindAsync(id);
+            var session = _db.Sessions.FindAsync(id)
+                                    .GetAwaiter()
+                                    .GetResult();
 
             if (session == null)
             {
@@ -92,15 +100,19 @@ namespace BackEnd.Controllers
             session.TrackId = input.TrackId;
             session.ConferenceID = input.ConferenceID;
 
-            await _db.SaveChangesAsync();
+            _db.SaveChangesAsync()
+                .GetAwaiter()
+                .GetResult();
 
             return NoContent();
         }
 
         [HttpDelete("{id:int}")]
-        public async Task<ActionResult<SessionResponse>> Delete(int id)
+        public ActionResult<SessionResponse> Delete(int id)
         {
-            var session = await _db.Sessions.FindAsync(id);
+            var session = _db.Sessions.FindAsync(id)
+                            .GetAwaiter()
+                            .GetResult();
 
             if (session == null)
             {
@@ -108,7 +120,9 @@ namespace BackEnd.Controllers
             }
 
             _db.Sessions.Remove(session);
-            await _db.SaveChangesAsync();
+            _db.SaveChangesAsync()
+                .GetAwaiter()
+                .GetResult();
 
             return session.MapSessionResponse();
         }
