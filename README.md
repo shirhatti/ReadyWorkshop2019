@@ -199,3 +199,46 @@ public ApiClient(HttpClient httpClient, IOptions<ApiClientOptions> options)
 
 ## Don't block a ThreadPool thread
 
+Let jump back over to our Backend and have a look at the `SessionsController`. While this is a contrived example of doing sync over async, this suffers from all the pitfalls that come from blocking ThreadPools. Blocking ThreadPool threads get progressively worse as continuations from the async calls you're blocking on have no thread to run on. The rate of injection of threads into the ThreadPool is typically very slow (~2 threads/seconds) and cannot save you're blocking threads faster than that.
+
+Let's look at one of the methods on this controller
+
+```csharp
+[HttpGet]
+public ActionResult<List<SessionResponse>> Get()
+{
+    var sessions = _db.Sessions.AsNoTracking()
+                                        .Include(s => s.Track)
+                                        .Include(s => s.SessionSpeakers)
+                                        .ThenInclude(ss => ss.Speaker)
+                                        .Include(s => s.SessionTags)
+                                        .ThenInclude(st => st.Tag)
+                                        .Select(m => m.MapSessionResponse())
+                                        .ToListAsync()
+                                        .GetAwaiter()
+                                        .GetResult();
+    return sessions;
+}
+```
+
+Fixing this trivial. Instead of calling `.GetAwaiter().GetResult()`, we can call await and change the signature to an Async method
+
+```csharp
+[HttpGet]
+public async Task<ActionResult<List<SessionResponse>>> Get()
+{
+    var sessions = await _db.Sessions.AsNoTracking()
+                                        .Include(s => s.Track)
+                                        .Include(s => s.SessionSpeakers)
+                                        .ThenInclude(ss => ss.Speaker)
+                                        .Include(s => s.SessionTags)
+                                        .ThenInclude(st => st.Tag)
+                                        .Select(m => m.MapSessionResponse())
+                                        .ToListAsync();
+
+    return sessions;
+}
+```
+
+Now attempt this exercise on all methods in this controller.
+
